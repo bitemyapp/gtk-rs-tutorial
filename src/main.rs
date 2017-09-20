@@ -44,27 +44,15 @@ fn gen_window() -> gtk::Window {
                                           .expect("Couldn't get text_view");
 
     // let window1 = window.clone();
-    // open_button.connect_clicked(move |_| {
-    //     // TODO move this to a impl?
-    //     let file_chooser = gtk::FileChooserDialog::new(
-    //         Some("Open File"), Some(&window1), gtk::FileChooserAction::Open);
-    //     file_chooser.add_buttons(&[
-    //         ("Open", gtk::ResponseType::Ok.into()),
-    //         ("Cancel", gtk::ResponseType::Cancel.into()),
-    //     ]);
-    //     if file_chooser.run() == gtk::ResponseType::Ok.into() {
-    //         let filename = file_chooser.get_filename().expect("Couldn't get filename");
-    //         let file = File::open(&filename).expect("Couldn't open file");
-
-    //         let mut reader = BufReader::new(file);
-    //         let mut contents = String::new();
-    //         let _ = reader.read_to_string(&mut contents);
-
-    //         text_view.get_buffer().expect("Couldn't get window").set_text(&contents);
-    //     }
-
-    //     file_chooser.destroy();
-    // });
+    send_button.connect_clicked(move |_| {
+        let mut new_input = text_input.get_text().unwrap_or("".to_string());
+        text_input.set_text("");
+        let text_buffer = text_view.get_buffer().expect("Couldn't get window");
+        let mut end_iter = text_buffer.get_end_iter();
+        new_input.push_str("\n");
+        text_buffer.insert(&mut end_iter, &new_input);
+        // text_view.get_buffer().expect("Couldn't get window").set_text(&new_input);
+    });
 
     // let label = gtk::Label::new("Some text");
     // let attr_list = pango::AttrList::new();
