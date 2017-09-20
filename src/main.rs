@@ -43,7 +43,6 @@ fn gen_window() -> gtk::Window {
     let text_view: gtk::TextView = builder.get_object("text_view")
                                           .expect("Couldn't get text_view");
 
-    // let window1 = window.clone();
     send_button.connect_clicked(move |_| {
         let mut new_input = text_input.get_text().unwrap_or("".to_string());
         text_input.set_text("");
@@ -51,42 +50,9 @@ fn gen_window() -> gtk::Window {
         let mut end_iter = text_buffer.get_end_iter();
         new_input.push_str("\n");
         text_buffer.insert(&mut end_iter, &new_input);
-        // text_view.get_buffer().expect("Couldn't get window").set_text(&new_input);
     });
 
-    // let label = gtk::Label::new("Some text");
-    // let attr_list = pango::AttrList::new();
-
-    // let mut attr = pango::Attribute::new_background(65535, 0, 0)
-    //                                 .expect("Couldn't create new background");
-    // attr.set_start_index(0);
-    // attr.set_end_index(2);
-    // attr_list.insert(attr);
-
-    // let mut attr = pango::Attribute::new_underline(pango::Underline::Single)
-    //                                 .expect("Couldn't create new underline");
-    // attr.set_start_index(1);
-    // attr.set_end_index(4);
-    // attr_list.insert(attr);
-
-    // let mut attr = pango::Attribute::new_strikethrough(true)
-    //                                 .expect("Couldn't create new strikethrough");
-    // attr.set_start_index(5);
-    // attr_list.insert(attr);
-
-    // let mut attr = pango::Attribute::new_scale(1.2)
-    //                                 .expect("Couldn't create new scale");
-    // attr.set_start_index(6);
-    // attr_list.insert(attr);
-
-    // label.set_attributes(&attr_list);
-    // window.add(&label);
-
-    // let button = gtk::Button::new_with_label("Click me!");
-    // let button2 = gtk::Button::new_with_label("Click me too!");
-    // window.add(&button);
     window.show_all();
-    // window.add(&button2);
     window
 }
 
