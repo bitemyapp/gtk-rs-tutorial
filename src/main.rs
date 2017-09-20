@@ -14,6 +14,8 @@ use std::fs::File;
 use gtk::prelude::*;
 use gtk::Builder;
 use Continue;
+use std::io::prelude::*;
+use std::net::TcpStream;
 
 fn gen_window() -> gtk::Window {
     let window = gtk::Window::new(gtk::WindowType::Toplevel);
@@ -42,6 +44,7 @@ fn gen_window() -> gtk::Window {
 
     let text_view: gtk::TextView = builder.get_object("text_view")
                                           .expect("Couldn't get text_view");
+    let mut text_view1 = text_view.clone();
 
     send_button.connect_clicked(move |_| {
         let mut new_input = text_input.get_text().unwrap_or("".to_string());
@@ -52,8 +55,42 @@ fn gen_window() -> gtk::Window {
         text_buffer.insert(&mut end_iter, &new_input);
     });
 
+    idle_add(move || {
+        // gen_window();
+        read_server(&mut text_view1);
+        let sleep_time = time::Duration::from_millis(2000);
+        thread::sleep(sleep_time);
+        Continue(true)
+    });
+
+    // idle_add(|| {
+    //     gen_window();
+    //     let sleep_time = time::Duration::from_millis(2000);
+    //     thread::sleep(sleep_time);
+    //     Continue(true)
+    // });
+
     window.show_all();
     window
+}
+
+// fn read_server() -> Continue + 'static {
+fn read_server(mut text_view: &gtk::TextView) {
+    let sleep_time = time::Duration::from_secs(5);
+    thread::sleep(sleep_time);
+    let mut stream = TcpStream::connect("127.0.0.1:34254").unwrap();
+
+    // ignore the Result
+    // let _ = stream.write(&[1]);
+    // let mut buffer = [0; 10];
+    let mut buffer = String::new();
+    let res = stream.read_to_string(&mut buffer); // ignore here too
+    println!("{:?}", res);
+    println!("{:?}", buffer);
+    text_view.get_buffer().expect("Couldn't get window").set_text(&buffer);
+    // buffer
+
+    // Continue(true)
 }
 
 fn main() {
@@ -64,12 +101,6 @@ fn main() {
 
     gen_window();
 
-    // idle_add(|| {
-    //     gen_window();
-    //     let sleep_time = time::Duration::from_millis(2000);
-    //     thread::sleep(sleep_time);
-    //     Continue(true)
-    // });
     // let handler = thread::spawn(|| {
     //     loop {
     //         let sleep_time = time::Duration::from_secs(5);
