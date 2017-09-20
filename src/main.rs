@@ -7,17 +7,20 @@ use gtk::prelude::*;
 
 
 use std::{thread, time};
-use std::io::prelude::*;
 use std::io::BufReader;
 use std::fs::File;
 
 use gtk::prelude::*;
 use gtk::Builder;
 use Continue;
+
+use std::cell::RefCell;
 use std::io::prelude::*;
 use std::net::TcpStream;
+use std::sync::mpsc::{Sender, Receiver};
+use std::sync::mpsc;
 
-fn gen_window() -> gtk::Window {
+fn gen_window(rx: Receiver<String>) -> gtk::Window {
     let window = gtk::Window::new(gtk::WindowType::Toplevel);
 
     window.set_title("First GTK+ Program");
@@ -55,10 +58,13 @@ fn gen_window() -> gtk::Window {
         text_buffer.insert(&mut end_iter, &new_input);
     });
 
+    // let mut rx1 = rx.clone();
+    let mut rx1 = rx;
+    // let mut rc_rx = RefCell::new(rx);
     idle_add(move || {
         // gen_window();
-        read_server(&mut text_view1);
-        let sleep_time = time::Duration::from_millis(2000);
+        read_server(&mut rx1, &mut text_view1);
+        let sleep_time = time::Duration::from_secs(1);
         thread::sleep(sleep_time);
         Continue(true)
     });
@@ -75,31 +81,53 @@ fn gen_window() -> gtk::Window {
 }
 
 // fn read_server() -> Continue + 'static {
-fn read_server(mut text_view: &gtk::TextView) {
-    let sleep_time = time::Duration::from_secs(5);
+fn read_server(mut rx: &Receiver<String>, mut text_view: &gtk::TextView) -> Continue {
+// fn read_server(mut rc_rx: RefCell<Receiver<String>>, mut text_view: &gtk::TextView) -> Continue {
+    let sleep_time = time::Duration::from_secs(1);
     thread::sleep(sleep_time);
-    let mut stream = TcpStream::connect("127.0.0.1:34254").unwrap();
+    // let mut ids = Vec::with_capacity(NTHREADS as usize);
+    // for _ in 0..NTHREADS {
+    //     // The `recv` method picks a message from the channel
+    //     // `recv` will block the current thread if there are no messages available
+    //     ids.push(rx.recv());
+    // }
+    // let mut rx = rc_rx.borrow_mut();
 
-    // ignore the Result
-    // let _ = stream.write(&[1]);
-    // let mut buffer = [0; 10];
-    let mut buffer = String::new();
-    let res = stream.read_to_string(&mut buffer); // ignore here too
-    println!("{:?}", res);
-    println!("{:?}", buffer);
+    // let buffer = rx.recv().unwrap();
+    // let mut buffer =
+    let mut buffer = String::with_capacity(25);
+
+    buffer.push_str(&rx.recv().unwrap());
     text_view.get_buffer().expect("Couldn't get window").set_text(&buffer);
+
     // buffer
 
-    // Continue(true)
+    Continue(true)
 }
 
 fn main() {
+    let (tx, rx): (Sender<String>, Receiver<String>) = mpsc::channel();
+    let thread_tx = tx.clone();
+    thread::spawn(move || {
+        // The thread takes ownership over `thread_tx`
+        // Each thread queues a message in the channel
+
+        // ignore the Result
+        // let _ = stream.write(&[1]);
+        // let mut buffer = [0; 10];
+        let mut stream = TcpStream::connect("127.0.0.1:34254").unwrap();
+        let mut buffer = String::new();
+        let res = stream.read_to_string(&mut buffer); // ignore here too
+        println!("{:?}", res);
+        println!("{:?}", buffer);
+        thread_tx.send(buffer).unwrap();
+    });
     if gtk::init().is_err() {
         println!("Failed to initialize GTK.");
         return;
     }
 
-    gen_window();
+    gen_window(rx);
 
     // let handler = thread::spawn(|| {
     //     loop {
